@@ -1,0 +1,24 @@
+# Disable DNS
+port=0
+
+interface={{ pxe_interface }}
+bind-interfaces
+
+{% if pxe_authoritative_dhcp %}
+dhcp-authoritative
+dhcp-range={{ dhcp_range_start }},{{ dhcp_range_end }},{{ dhcp_netmask }},{{ dhcp_lease_time }}
+dhcp-option=option:router,{{ dhcp_gateway }}
+dhcp-option=option:dns-server,{{ dhcp_dns }}
+dhcp-option=option:domain-name,{{ dhcp_domain }}
+{% else %}
+dhcp-range={{ pxe_server_ip }},proxy,{{ dhcp_netmask }}
+{% endif %}
+
+enable-tftp
+tftp-root={{ tftp_root }}
+
+# BIOS
+pxe-service=x86PC,"PXELINUX (BIOS)",pxelinux
+
+# UEFI
+pxe-service=X86-64_EFI,"BOOTX64 (UEFI)",BOOTX64.EFI

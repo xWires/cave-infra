@@ -1,0 +1,24 @@
+---
+# The interface to serve DHCP and TFTP on
+pxe_interface: ens18
+
+# This server's IP address on the interface
+pxe_server_ip: 10.2.1.88
+
+# Set this to true if this is the only DHCP server and have it assign IPs, otherwise set this to false to only answer PXE requests
+pxe_authoritative_dhcp: false
+
+dhcp_range_start: 10.2.1.1
+dhcp_range_end: 10.2.1.210
+dhcp_netmask: 255.255.255.0
+dhcp_lease_time: 12h
+
+tftp_root: /var/lib/tftpboot
+http_root: /var/www/html
+
+# The Fedora ISO to use
+iso_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Server/x86_64/iso/Fedora-Server-dvd-x86_64-44-1.7.iso"
+iso_sha256: "85837793bfa36db6bc709b4cecd2ec116951b87d9c53c3d95eb2fac8dcf7cf1f"
+
+# Kickstart file for Fedora setup
+kickstart_src: "files/anaconda-ks.cfg"

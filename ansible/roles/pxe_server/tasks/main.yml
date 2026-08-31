@@ -1,0 +1,147 @@
+---
+- name: Install required packages
+  ansible.builtin.dnf:
+    name:
+      - caddy
+      - dnsmasq
+      - syslinux-nonlinux
+      - shim-x64
+    state: present
+
+- name: Create folders
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ tftp_root }}"
+    - "{{ tftp_root }}/pxelinux.cfg"
+    - "{{ http_root }}"
+
+- name: Configure dnsmasq
+  ansible.builtin.template:
+    src: dnsmasq.conf.j2
+    dest: "/etc/dnsmasq.conf"
+    mode: "0644"
+  notify:
+    - Restart dnsmasq
+
+- name: Enable dnsmasq
+  ansible.builtin.systemd:
+    name: dnsmasq
+    enabled: true
+
+- name: Copy pxelinux/syslinux modules into TFTP folder
+  ansible.builtin.copy:
+    src: "/usr/share/syslinux/{{ item }}"
+    dest: "{{ tftp_root }}/{{ item }}"
+    remote_src: true
+    mode: "0644"
+  loop:
+    - pxelinux.0
+    - menu.c32
+    - ldlinux.c32
+    - libutil.c32
+    - vesamenu.c32
+
+- name: Create pxelinux boot menu (BIOS only)
+  ansible.builtin.template:
+    src: pxelinux_default.j2
+    dest: "{{ tftp_root }}/pxelinux.cfg/default"
+    mode: "0644"
+
+- name: Copy shimx64.efi into TFTP folder (UEFI only)
+  ansible.builtin.copy:
+    src: /boot/efi/EFI/fedora/shimx64.efi
+    dest: "{{ tftp_root }}/BOOTX64.EFI"
+    remote_src: true
+    mode: "0644"
+
+- name: Copy grubx64.efi into TFTP root (UEFI only)
+  ansible.builtin.copy:
+    src: /boot/efi/EFI/fedora/grubx64.efi
+    dest: "{{ tftp_root }}/grubx64.efi"
+    remote_src: true
+    mode: "0644"
+
+- name: Create grub.cfg (UEFI only)
+  ansible.builtin.template:
+    src: grub.cfg.j2
+    dest: "{{ tftp_root }}/grub.cfg"
+    mode: "0644"
+
+- name: Download Fedora ISO
+  ansible.builtin.get_url:
+    url: "{{ iso_url }}"
+    checksum: "sha256:{{ iso_sha256 }}"
+    dest: "/root/fedora.iso"
+
+- name: Mount ISO under HTTP root
+  ansible.builtin.mount:
+    src: "/root/fedora.iso"
+    path: "{{ http_root }}/iso"
+    fstype: iso9660
+    opts: loop,ro
+    state: mounted
+
+- name: Copy netboot vmlinuz
+  ansible.builtin.copy:
+    src: "{{ http_root }}/iso/images/pxeboot/vmlinuz"
+    dest: "{{ tftp_root }}/vmlinuz"
+    mode: "0644"
+    remote_src: true
+
+- name: Copy netboot initrd
+  ansible.builtin.copy:
+    src: "{{ http_root }}/iso/images/pxeboot/initrd.img"
+    dest: "{{ tftp_root }}/initrd.img"
+    mode: "0644"
+    remote_src: true
+
+- name: Create kickstart file (if provided)
+  ansible.builtin.copy:
+    src: "{{ kickstart_src }}"
+    dest: "{{ http_root }}/ks.cfg"
+    mode: "0644"
+  when: kickstart_src | length > 0
+
+- name: Set SELinux boolean for Caddy to be able to read HTTP content
+  ansible.posix.seboolean:
+    name: httpd_read_user_content
+    state: true
+    persistent: true
+
+- name: Ensure correct SELinux context on TFTP root
+  ansible.builtin.command: restorecon -Rv {{ tftp_root }}
+  changed_when: false
+
+- name: Ensure correct SELinux context on HTTP root
+  ansible.builtin.command: restorecon -Rv {{ http_root }}
+  changed_when: false
+
+- name: Configure Caddy
+  ansible.builtin.template:
+    src: "Caddyfile.j2"
+    dest: "/etc/caddy/Caddyfile"
+    mode: "0644"
+  notify:
+    - Restart Caddy
+
+- name: Enable Caddy
+  ansible.builtin.systemd:
+    name: caddy
+    enabled: true
+
+- name: Allow traffic through firewall
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - dhcp
+    - http
+    - proxy-dhcp
+    - tftp

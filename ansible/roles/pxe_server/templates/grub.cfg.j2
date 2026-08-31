@@ -1,0 +1,10 @@
+set timeout=10
+
+menuentry 'Install (network)' {
+    linuxefi vmlinuz inst.repo=http://{{ pxe_server_ip }}/iso {{ '' if not kickstart_src else 'inst.ks=http://' ~ pxe_server_ip ~ '/ks.cfg' }}
+    initrdefi initrd.img
+}
+
+menuentry 'Boot from local disk' {
+    exit
+}

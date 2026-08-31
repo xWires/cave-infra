@@ -1,0 +1,6 @@
+---
+- name: Configure PXE boot server
+  hosts: pxe_servers
+  become: true
+  roles:
+    - pxe_server
