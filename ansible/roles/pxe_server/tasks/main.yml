@@ -19,6 +19,7 @@
     - "{{ tftp_root }}"
     - "{{ tftp_root }}/pxelinux.cfg"
     - "{{ http_root }}"
+    - "{{ http_root }}/fedora_server"
 
 - name: Configure dnsmasq
   ansible.builtin.template:
@@ -33,77 +34,42 @@
     name: dnsmasq
     enabled: true
 
-- name: Copy pxelinux/syslinux modules into TFTP folder
-  ansible.builtin.copy:
-    src: "/usr/share/syslinux/{{ item }}"
-    dest: "{{ tftp_root }}/{{ item }}"
-    remote_src: true
-    mode: "0644"
-  loop:
-    - pxelinux.0
-    - menu.c32
-    - ldlinux.c32
-    - libutil.c32
-    - vesamenu.c32
+- name: Download iPXE (BIOS)
+  ansible.builtin.get_url:
+    url: "http://boot.ipxe.org/undionly.kpxe"
+    dest: "{{ tftp_root }}/undionly.kpxe"
+    checksum: "sha256:d7cfb8bdcbfdcf86fd7210a4677121ec3535495cf0985a51fea63200aebbd2cd"
 
-- name: Create pxelinux boot menu (BIOS only)
+- name: Download iPXE (UEFI)
+  ansible.builtin.get_url:
+    url: "https://boot.ipxe.org/x86_64-efi/ipxe.efi"
+    dest: "{{ tftp_root }}/ipxe.efi"
+    checksum: "sha256:93999fb8a5fc9f558c2e3c13773f104ad85c933f4cf14f81604c0ee344779866"
+
+- name: Create iPXE autoexec
   ansible.builtin.template:
-    src: pxelinux_default.j2
-    dest: "{{ tftp_root }}/pxelinux.cfg/default"
-    mode: "0644"
-
-- name: Copy shimx64.efi into TFTP folder (UEFI only)
-  ansible.builtin.copy:
-    src: /boot/efi/EFI/fedora/shimx64.efi
-    dest: "{{ tftp_root }}/BOOTX64.EFI"
-    remote_src: true
-    mode: "0644"
-
-- name: Copy grubx64.efi into TFTP root (UEFI only)
-  ansible.builtin.copy:
-    src: /boot/efi/EFI/fedora/grubx64.efi
-    dest: "{{ tftp_root }}/grubx64.efi"
-    remote_src: true
-    mode: "0644"
-
-- name: Create grub.cfg (UEFI only)
-  ansible.builtin.template:
-    src: grub.cfg.j2
-    dest: "{{ tftp_root }}/grub.cfg"
+    src: autoexec.ipxe.j2
+    dest: "{{ tftp_root }}/autoexec.ipxe"
     mode: "0644"
 
 - name: Download Fedora ISO
   ansible.builtin.get_url:
     url: "{{ iso_url }}"
     checksum: "sha256:{{ iso_sha256 }}"
-    dest: "/root/fedora.iso"
+    dest: "{{ http_root }}/fedora_server/fedora.iso"
 
-- name: Mount ISO under HTTP root
+- name: Mount Fedora ISO under HTTP root
   ansible.builtin.mount:
-    src: "/root/fedora.iso"
-    path: "{{ http_root }}/iso"
+    src: "{{ http_root }}/fedora_server/fedora.iso"
+    path: "{{ http_root }}/fedora_server/iso"
     fstype: iso9660
     opts: loop,ro
     state: mounted
 
-- name: Copy netboot vmlinuz
-  ansible.builtin.copy:
-    src: "{{ http_root }}/iso/images/pxeboot/vmlinuz"
-    dest: "{{ tftp_root }}/vmlinuz"
-    mode: "0644"
-    remote_src: true
-
-- name: Copy netboot initrd
-  ansible.builtin.copy:
-    src: "{{ http_root }}/iso/images/pxeboot/initrd.img"
-    dest: "{{ tftp_root }}/initrd.img"
-    mode: "0644"
-    remote_src: true
-
-- name: Create kickstart file (if provided)
+- name: Create Fedora kickstart file (if provided)
   ansible.builtin.copy:
     src: "{{ kickstart_src }}"
-    dest: "{{ http_root }}/ks.cfg"
+    dest: "{{ http_root }}/fedora_server/ks.cfg"
     mode: "0644"
   when: kickstart_src | length > 0
 

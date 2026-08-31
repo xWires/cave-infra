@@ -18,7 +18,7 @@ enable-tftp
 tftp-root={{ tftp_root }}
 
 # BIOS
-pxe-service=x86PC,"PXELINUX (BIOS)",pxelinux
+pxe-service=x86PC,"iPXE (BIOS)",undionly.kpxe
 
 # UEFI
-pxe-service=X86-64_EFI,"BOOTX64 (UEFI)",BOOTX64.EFI
+pxe-service=X86-64_EFI,"iPXE (UEFI)",ipxe.efi

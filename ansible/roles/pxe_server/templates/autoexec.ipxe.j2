@@ -1,0 +1,17 @@
+#!ipxe
+
+dhcp
+
+menu Choose an OS
+item --default exit Exit
+item fedora_server Install Fedora Server
+choose --timeout 5000 target && goto ${target}
+
+:fedora_server
+echo Booting Fedora Server Installer...
+kernel http://{{ pxe_server_ip }}/fedora_server/iso/images/pxeboot/vmlinuz inst.repo=http://{{ pxe_server_ip }}/fedora_server/iso {{ '' if not kickstart_src else 'inst.ks=http://' ~ pxe_server_ip ~ '/fedora_server/ks.cfg' }}
+initrd http://{{ pxe_server_ip }}/fedora_server/iso/images/pxeboot/initrd.img
+boot
+
+:exit
+exit
