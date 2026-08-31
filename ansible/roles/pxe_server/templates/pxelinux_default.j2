@@ -3,11 +3,11 @@ PROMPT 0
 TIMEOUT 100
 MENU TITLE PXE Boot Menu
 
+LABEL local
+    MENU LABEL Boot from local disk
+    LOCALBOOT 0
+
 LABEL netboot
     MENU LABEL Install (network)
     KERNEL vmlinuz
     APPEND initrd=initrd.img inst.repo=http://{{ pxe_server_ip }}/iso {{ '' if not kickstart_src else 'inst.ks=http://' ~ pxe_server_ip ~ '/ks.cfg' }}
-
-LABEL local
-    MENU LABEL Boot from local disk
-    LOCALBOOT 0
