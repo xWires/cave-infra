@@ -56,8 +56,8 @@ source "qemu" "win" {
   winrm_username = "Administrator"
   winrm_password = var.build_password
 
-  shutdown_command = "shutdown /s /t 0"
-  # shutdown_command = "C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown /quiet /unattend:C:\\Windows\\Temp\\sysprep-unattend.xml"
+  # I honestly have no idea why sysprep doesn't run properly directly through WinRM, but running it with a scheduled task works just fine
+  shutdown_command = "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Windows\\Temp\\Start-Sysprep.ps1"
   shutdown_timeout = "30m"
   output_directory = "${path.root}/output"
   vm_name          = "win.qcow2"
@@ -65,6 +65,11 @@ source "qemu" "win" {
 
 build {
   sources = ["source.qemu.win"]
+
+  provisioner "file" {
+    source = "${path.root}/Start-Sysprep.ps1"
+    destination = "C:\\Windows\\Temp\\Start-Sysprep.ps1"
+  }
 
   provisioner "powershell" {
     script = "${path.root}/Update-Windows.ps1"
