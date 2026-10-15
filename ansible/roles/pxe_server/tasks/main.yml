@@ -20,6 +20,7 @@
     - "{{ tftp_root }}/pxelinux.cfg"
     - "{{ http_root }}"
     - "{{ http_root }}/fedora_server"
+    - "{{ http_root }}/windows_server"
 
 - name: Configure dnsmasq
   ansible.builtin.template:
@@ -54,8 +55,8 @@
 
 - name: Download Fedora ISO
   ansible.builtin.get_url:
-    url: "{{ iso_url }}"
-    checksum: "sha256:{{ iso_sha256 }}"
+    url: "{{ fedora_iso_url }}"
+    checksum: "sha256:{{ fedora_iso_sha256 }}"
     dest: "{{ http_root }}/fedora_server/fedora.iso"
 
 - name: Mount Fedora ISO under HTTP root
@@ -72,6 +73,26 @@
     dest: "{{ http_root }}/fedora_server/ks.cfg"
     mode: "0644"
   when: kickstart_src | length > 0
+
+- name: Download wimboot
+  ansible.builtin.get_url:
+    url: "{{ wimboot_url }}"
+    checksum: "sha256:{{ wimboot_sha256 }}"
+    dest: "{{ http_root }}/windows_server/wimboot"
+
+- name: Download Windows Server ISO
+  ansible.builtin.get_url:
+    url: "{{ windows_iso_url }}"
+    checksum: "sha256:{{ windows_iso_sha256 }}"
+    dest: "{{ http_root }}/windows_server/windows.iso"
+
+- name: Mount Windows Server ISO under HTTP root
+  ansible.builtin.mount:
+    src: "{{ http_root }}/windows_server/windows.iso"
+    path: "{{ http_root }}/windows_server/iso"
+    fstype: udf
+    opts: loop,ro
+    state: mounted
 
 - name: Set SELinux boolean for Caddy to be able to read HTTP content
   ansible.posix.seboolean:

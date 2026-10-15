@@ -16,9 +16,17 @@ dhcp_lease_time: 12h
 tftp_root: /var/lib/tftpboot
 http_root: /var/www/html
 
+# Where to get wimboot from
+wimboot_url: "https://github.com/ipxe/wimboot/releases/download/v2.9.0/wimboot"
+wimboot_sha256: "5f067ccdc4d084d5bf77b6c853bd0f8402dfc2b4cd1b103d358993ae97fae8e3"
+
 # The Fedora ISO to use
-iso_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Server/x86_64/iso/Fedora-Server-dvd-x86_64-44-1.7.iso"
-iso_sha256: "85837793bfa36db6bc709b4cecd2ec116951b87d9c53c3d95eb2fac8dcf7cf1f"
+fedora_iso_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Server/x86_64/iso/Fedora-Server-dvd-x86_64-44-1.7.iso"
+fedora_iso_sha256: "85837793bfa36db6bc709b4cecd2ec116951b87d9c53c3d95eb2fac8dcf7cf1f"
+
+# The Windows Server ISO to use
+windows_iso_url: "https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso" # I got this link from https://www.microsoft.com/en-gb/evalcenter/download-windows-server-2022
+windows_iso_sha256: "3e4fa6d8507b554856fc9ca6079cc402df11a8b79344871669f0251535255325"
 
 # Kickstart file for Fedora setup
 kickstart_src: "files/anaconda-ks.cfg"

@@ -1,0 +1,2 @@
+# This is for when Packer connects to the machine over WinRM
+build_password = "some_password"

@@ -2,3 +2,7 @@
 .vscode/
 
 .ansible/
+
+*.auto.pkrvars.hcl
+images/windows_server/drivers/
+images/windows_server/output/
