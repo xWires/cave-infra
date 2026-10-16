@@ -1,5 +1,0 @@
----
-- name: Configure Windows Server
-  hosts: windows_servers
-  roles:
-    - windows_server

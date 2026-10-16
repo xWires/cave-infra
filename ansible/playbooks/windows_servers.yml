@@ -1,0 +1,10 @@
+---
+- name: Configure Domain Controller
+  hosts: ad_dc
+  vars_prompt:
+    - name: ad_safe_mode_password
+      prompt: Enter the safe mode password for the domain
+      private: true
+  roles:
+    - windows_server_rdp
+    - windows_server_ad_dc
