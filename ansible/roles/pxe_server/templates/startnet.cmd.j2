@@ -19,6 +19,10 @@ diskpart /s X:\part.txt || goto err
 
 dism /apply-image /imagefile:Z:\windows_server\install.wim /index:1 /applydir:W:\ || goto err
 
+REM Add the unattend.xml file for skipping OOBE
+mkdir W:\Windows\Panther
+copy /Y Z:\windows_server\unattend.xml W:\Windows\Panther\unattend.xml || goto err
+
 bcdboot W:\Windows /s S: /f UEFI || goto err
 
 wpeutil reboot

@@ -2,5 +2,9 @@
 - name: Configure PXE boot server
   hosts: pxe_servers
   become: true
+  vars_prompt:
+    - name: win_admin_password
+      prompt: What should the Windows administrator password be set to?
+      private: true
   roles:
     - pxe_server

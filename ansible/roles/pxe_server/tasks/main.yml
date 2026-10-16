@@ -123,6 +123,12 @@
     dest: "{{ srv_root }}/windows_server/startnet.cmd"
   when: windows_wim_src | length > 0
 
+- name: Copy unattend.xml (if using custom WIM)
+  ansible.builtin.template:
+    src: "unattend.xml.j2"
+    dest: "{{ srv_root }}/windows_server/unattend.xml"
+  when: windows_wim_src | length > 0
+
 - name: Configure Caddy
   ansible.builtin.template:
     src: "Caddyfile.j2"
