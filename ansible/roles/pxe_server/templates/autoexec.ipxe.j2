@@ -5,7 +5,7 @@ dhcp
 menu Choose an OS
 item --default exit Exit
 item fedora_server Install Fedora Server (auto)
-item windows_server Install Windows Server (manual)
+item windows_server Install Windows Server (auto)
 choose --timeout 10000 target && goto ${target}
 
 :fedora_server
