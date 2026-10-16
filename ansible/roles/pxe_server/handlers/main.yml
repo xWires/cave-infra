@@ -8,3 +8,8 @@
   ansible.builtin.systemd:
     name: caddy
     state: restarted
+
+- name: Restart Samba
+  ansible.builtin.systemd:
+    name: smb
+    state: restarted

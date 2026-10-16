@@ -17,6 +17,8 @@ boot
 :windows_server
 echo Booting Windows Server Installer...
 kernel http://{{ pxe_server_ip }}/windows_server/wimboot
+initrd http://{{ pxe_server_ip }}/windows_server/winpeshl.ini winpeshl.ini
+initrd http://{{ pxe_server_ip }}/windows_server/startnet.cmd startnet.cmd
 initrd http://{{ pxe_server_ip }}/windows_server/iso/sources/boot.wim boot.wim
 boot
 

@@ -111,6 +111,18 @@
     dest: "{{ srv_root }}/windows_server/install.wim"
   when: windows_wim_src | length > 0
 
+- name: Copy winpeshl.ini (if using custom WIM)
+  ansible.builtin.copy:
+    src: "files/winpeshl.ini"
+    dest: "{{ srv_root }}/windows_server/winpeshl.ini"
+  when: windows_wim_src | length > 0
+
+- name: Copy startnet.cmd (if using custom WIM)
+  ansible.builtin.template:
+    src: "startnet.cmd.j2"
+    dest: "{{ srv_root }}/windows_server/startnet.cmd"
+  when: windows_wim_src | length > 0
+
 - name: Configure Caddy
   ansible.builtin.template:
     src: "Caddyfile.j2"
@@ -124,6 +136,19 @@
     name: caddy
     enabled: true
 
+- name: Configure Samba
+  ansible.builtin.template:
+    src: "smb.conf.j2"
+    dest: "/etc/samba/smb.conf"
+    mode: "0644"
+  notify:
+    - Restart Samba
+
+- name: Enable Samba
+  ansible.builtin.systemd:
+    name: smb
+    enabled: true
+
 - name: Allow traffic through firewall
   ansible.posix.firewalld:
     service: "{{ item }}"
@@ -134,4 +159,5 @@
     - dhcp
     - http
     - proxy-dhcp
+    - samba
     - tftp

@@ -1,0 +1,28 @@
+wpeinit
+wpeutil initializenetwork
+
+net use Z: \\{{ pxe_server_ip }}\PXE || goto err
+
+(
+echo select disk 0
+echo clean
+echo convert gpt
+echo create partition efi size=500
+echo format quick fs=fat32 label="System"
+echo assign letter=S
+echo create partition msr size=16
+echo create partition primary
+echo format quick fs=ntfs label="Windows"
+echo assign letter=W
+) > X:\part.txt
+diskpart /s X:\part.txt || goto err
+
+dism /apply-image /imagefile:Z:\windows_server\install.wim /index:1 /applydir:W:\ || goto err
+
+bcdboot W:\Windows /s S: /f UEFI || goto err
+
+wpeutil reboot
+
+:err
+echo Something failed!
+cmd

@@ -3,6 +3,7 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     ansible
     packer
+    python314Packages.pywinrm
     qemu
     wimlib
     xorriso

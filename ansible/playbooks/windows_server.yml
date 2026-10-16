@@ -1,0 +1,7 @@
+---
+- name: Configure Windows Server
+  hosts: windows_servers
+  # become: true
+  # become_method: runas
+  roles:
+    - windows_server
