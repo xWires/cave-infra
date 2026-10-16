@@ -66,6 +66,12 @@ source "qemu" "win" {
 build {
   sources = ["source.qemu.win"]
 
+  # This file is only needed after the image is deployed to regenerate the certificate because the hostname will have changed
+  provisioner "file" {
+    source = "${path.root}/Enable-WinRM.ps1"
+    destination = "C:\\Windows\\Temp\\Enable-WinRM.ps1"
+  }
+
   provisioner "file" {
     source = "${path.root}/Start-Sysprep.ps1"
     destination = "C:\\Windows\\Temp\\Start-Sysprep.ps1"
