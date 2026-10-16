@@ -1,11 +1,22 @@
 ---
+# I couldn't get SELinux to work on srv_root because Caddy and Samba both need to read it
+- name: Disable SELinux
+  ansible.posix.selinux:
+    state: disabled
+  register: disable_selinux
+
+- name: Reboot if required by SELinux
+  ansible.builtin.reboot:
+  when: disable_selinux.reboot_required
+
 - name: Install required packages
   ansible.builtin.dnf:
     name:
       - caddy
       - dnsmasq
-      - syslinux-nonlinux
+      - samba
       - shim-x64
+      - syslinux-nonlinux
     state: present
 
 - name: Create folders
@@ -18,9 +29,9 @@
   loop:
     - "{{ tftp_root }}"
     - "{{ tftp_root }}/pxelinux.cfg"
-    - "{{ http_root }}"
-    - "{{ http_root }}/fedora_server"
-    - "{{ http_root }}/windows_server"
+    - "{{ srv_root }}"
+    - "{{ srv_root }}/fedora_server"
+    - "{{ srv_root }}/windows_server"
 
 - name: Configure dnsmasq
   ansible.builtin.template:
@@ -57,12 +68,12 @@
   ansible.builtin.get_url:
     url: "{{ fedora_iso_url }}"
     checksum: "sha256:{{ fedora_iso_sha256 }}"
-    dest: "{{ http_root }}/fedora_server/fedora.iso"
+    dest: "{{ srv_root }}/fedora_server/fedora.iso"
 
 - name: Mount Fedora ISO under HTTP root
   ansible.builtin.mount:
-    src: "{{ http_root }}/fedora_server/fedora.iso"
-    path: "{{ http_root }}/fedora_server/iso"
+    src: "{{ srv_root }}/fedora_server/fedora.iso"
+    path: "{{ srv_root }}/fedora_server/iso"
     fstype: iso9660
     opts: loop,ro
     state: mounted
@@ -70,7 +81,7 @@
 - name: Create Fedora kickstart file (if provided)
   ansible.builtin.copy:
     src: "{{ kickstart_src }}"
-    dest: "{{ http_root }}/fedora_server/ks.cfg"
+    dest: "{{ srv_root }}/fedora_server/ks.cfg"
     mode: "0644"
   when: kickstart_src | length > 0
 
@@ -78,35 +89,27 @@
   ansible.builtin.get_url:
     url: "{{ wimboot_url }}"
     checksum: "sha256:{{ wimboot_sha256 }}"
-    dest: "{{ http_root }}/windows_server/wimboot"
+    dest: "{{ srv_root }}/windows_server/wimboot"
 
 - name: Download Windows Server ISO
   ansible.builtin.get_url:
     url: "{{ windows_iso_url }}"
     checksum: "sha256:{{ windows_iso_sha256 }}"
-    dest: "{{ http_root }}/windows_server/windows.iso"
+    dest: "{{ srv_root }}/windows_server/windows.iso"
 
 - name: Mount Windows Server ISO under HTTP root
   ansible.builtin.mount:
-    src: "{{ http_root }}/windows_server/windows.iso"
-    path: "{{ http_root }}/windows_server/iso"
+    src: "{{ srv_root }}/windows_server/windows.iso"
+    path: "{{ srv_root }}/windows_server/iso"
     fstype: udf
     opts: loop,ro
     state: mounted
 
-- name: Set SELinux boolean for Caddy to be able to read HTTP content
-  ansible.posix.seboolean:
-    name: httpd_read_user_content
-    state: true
-    persistent: true
-
-- name: Ensure correct SELinux context on TFTP root
-  ansible.builtin.command: restorecon -Rv {{ tftp_root }}
-  changed_when: false
-
-- name: Ensure correct SELinux context on HTTP root
-  ansible.builtin.command: restorecon -Rv {{ http_root }}
-  changed_when: false
+- name: Copy WIM file (if provided)
+  ansible.builtin.copy:
+    src: "{{ windows_wim_src }}"
+    dest: "{{ srv_root }}/windows_server/install.wim"
+  when: windows_wim_src | length > 0
 
 - name: Configure Caddy
   ansible.builtin.template:
