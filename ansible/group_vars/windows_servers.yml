@@ -4,4 +4,4 @@ ansible_connection: winrm
 ansible_winrm_transport: basic
 ansible_winrm_server_cert_validation: ignore # Required for self-signed certs
 
-ad_domain: cave.tangledwires.xyz
+ad_domain: CAVE.TANGLEDWIRES.XYZ
