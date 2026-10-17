@@ -1,0 +1,24 @@
+---
+- name: Install Windows Server Backup
+  ansible.windows.win_feature:
+    name: Windows-Server-Backup
+    include_management_tools: true
+    include_sub_features: true
+    state: present
+
+- name: Configure Windows Server Backup
+  ansible.windows.win_powershell:
+    script: |
+      $ErrorActionPreference = "Stop"
+
+      $Policy = New-WBPolicy
+
+      $Credential = [PSCredential]::New("Administrator", (ConvertTo-SecureString "{{ ansible_ssh_pass }}" -AsPlainText -Force))
+      $Target = New-WBBackupTarget -NetworkPath "{{ windows_backup_network_path }}" -Credential $Credential
+      
+      Add-WBSystemState -Policy $Policy
+      Add-WBBackupTarget -Policy $Policy -Target $Target
+      Set-WBSchedule -Policy $Policy 00:00
+      Set-WBPolicy $Policy
+  no_log: true
+
