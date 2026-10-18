@@ -12,4 +12,3 @@
     domain_netbios_name: "{{ ad_domain.split('.')[0] }}"
     safe_mode_password: "{{ ad_safe_mode_password }}"
     reboot: true
-  register: create_domain
