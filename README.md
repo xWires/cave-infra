@@ -13,3 +13,10 @@ To build the Windows Server image, you must first get the virtio-win drivers and
 To set up the PXE server, set the `pxe_server_ip` variable in `ansible/group_vars/pxe_servers.yml` to the IP used by the PXE server. Also, add it to the `ansible/inventory.ini` file under the `[pxe_servers]` group.
 
 Then run `ansible-playbook -i ansible/inventory.ini ansible/playbooks/pxe_server.yml`
+
+# Active Directory
+
+To set up Active Directory, set the `ad_initial_dc` host in `inventory.ini` to the server to use to set up the domain, then run `ansible-playbook -i ansible/inventory.ini ansible/playbooks/create_ad_domain.yml --ask-pass`.
+
+After the initial domain controller has created the forest and DNS, set `ad_dns` to its IP address and run `ansible-playbook -i ansible/inventory.ini ansible/playbooks/windows_servers.yml --ask-pass`.
+Additional domain controllers use the initial controller for DNS while joining and switch to local DNS afterwards. The `windows_server_ad_dc` role skips the initial controller.

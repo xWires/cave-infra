@@ -5,6 +5,7 @@ ansible_winrm_transport: basic
 ansible_winrm_server_cert_validation: ignore # Required for self-signed certs
 
 ad_domain: CAVE.TANGLEDWIRES.XYZ
+ad_dns: 10.2.1.103 # The DNS server that Windows Server hosts other than ad_initial_dc should use
 
 # The share must allow write access from the DOMAIN\Administrator user
 windows_backup_network_path: "\\\\10.2.1.87\\WindowsServerBackups"

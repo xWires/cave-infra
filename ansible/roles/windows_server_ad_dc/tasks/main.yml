@@ -1,14 +1,33 @@
 ---
+- name: Configure DNS to use an existing domain controller
+  ansible.windows.win_dns_client:
+    adapter_names: "*"
+    dns_servers:
+      - "{{ ad_dns }}"
+  when: inventory_hostname not in groups["ad_initial_dc"]
+
 - name: Install Active Directory Domain Services
   ansible.windows.win_feature:
     name: AD-Domain-Services
     include_management_tools: true
     include_sub_features: true
     state: present
+  when: inventory_hostname not in groups["ad_initial_dc"]
 
-- name: Create domain
-  microsoft.ad.domain:
+- name: Join domain as domain controller
+  microsoft.ad.domain_controller:
     dns_domain_name: "{{ ad_domain }}"
-    domain_netbios_name: "{{ ad_domain.split('.')[0] }}"
+    domain_admin_user: "{{ ad_domain.split('.')[0] }}\\Administrator"
+    domain_admin_password: "{{ ansible_ssh_pass }}"
     safe_mode_password: "{{ ad_safe_mode_password }}"
+    state: domain_controller
     reboot: true
+  when: inventory_hostname not in groups["ad_initial_dc"]
+
+- name: Use local DNS as preferred DNS server
+  ansible.windows.win_dns_client:
+    adapter_names: "*"
+    dns_servers:
+      - "127.0.0.1"
+      - "{{ ad_dns }}"
+  when: inventory_hostname not in groups["ad_initial_dc"]

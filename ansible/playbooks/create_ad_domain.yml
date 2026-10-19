@@ -1,0 +1,9 @@
+---
+- name: Create Active Directory domain
+  hosts: ad_initial_dc
+  vars_prompt:
+    - name: ad_safe_mode_password
+      prompt: Enter the safe mode password for the domain
+      private: true
+  roles:
+    - create_ad_domain
