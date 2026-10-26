@@ -1,0 +1,9 @@
+---
+- name: Join AD domain
+  microsoft.ad.membership:
+    dns_domain_name: "{{ ad_domain }}"
+    domain_admin_user: "{{ ad_domain.split('.')[0] }}\\Administrator"
+    domain_admin_password: "{{ ansible_ssh_pass }}"
+    state: domain
+    reboot: true
+  when: inventory_hostname not in groups["ad_initial_dc"]

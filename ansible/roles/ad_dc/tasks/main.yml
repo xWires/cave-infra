@@ -14,7 +14,7 @@
     state: present
   when: inventory_hostname not in groups["ad_initial_dc"]
 
-- name: Join domain as domain controller
+- name: Promote to domain controller
   microsoft.ad.domain_controller:
     dns_domain_name: "{{ ad_domain }}"
     domain_admin_user: "{{ ad_domain.split('.')[0] }}\\Administrator"

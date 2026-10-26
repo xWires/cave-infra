@@ -1,0 +1,75 @@
+---
+- name: Install required features
+  ansible.windows.win_feature:
+    name:
+      - NET-Framework-45-ASPNET
+      - NET-WCF-HTTP-Activation45
+      - NET-WCF-Pipe-Activation45
+      - RPC-over-HTTP-proxy
+      - RSAT-Clustering
+      - RSAT-Clustering-CmdInterface
+      - RSAT-Clustering-Mgmt
+      - RSAT-Clustering-PowerShell
+      - Web-ASP-NET45
+      - Web-Digest-Auth
+      - Web-Dyn-Compression
+      - Web-ISAPI-Ext
+      - Web-Mgmt-Console
+      - Web-Mgmt-Service
+      - Web-Net-Ext45
+      - Web-WMI
+  register: install_features
+
+- name: Install IIS URL Rewrite Module
+  ansible.windows.win_package:
+    product_id: "{9BCA2118-F753-4A1E-BCF3-5A820729965C}"
+    path: https://download.microsoft.com/download/1/2/8/128E2E22-C1B9-44A4-BE2A-5859ED1D4592/rewrite_amd64_en-US.msi
+    arguments: /qn /norestart
+  register: install_url_rewrite
+
+- name: Install Unified Communications Managed API 4.0 Runtime
+  ansible.windows.win_package:
+    product_id: UCMA4
+    path: https://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe
+    arguments: /q /norestart
+  register: install_ucma
+
+- name: Install Visual C++ 2013 Redistributable
+  ansible.windows.win_package:
+    product_id: "{A749D8E6-B613-3BE3-8F5F-045C84EBA29B}"
+    path: https://download.microsoft.com/download/2/e/6/2e61cfa4-993b-4dd4-91da-3737cd5cd6e3/vcredist_x64.exe
+    arguments: /quiet /norestart
+  register: install_vcredist13
+
+- name: Reboot if required
+  ansible.windows.win_reboot:
+  when: install_features.reboot_required or install_url_rewrite.changed or install_ucma.changed or install_vcredist13.changed
+
+- name: Download Exchange Server
+  ansible.windows.win_get_url:
+    url: "{{ exchange_url }}"
+    dest: "C:\\Windows\\Temp\\Exchange.iso"
+    checksum: "{{ exchange_sha1 }}"
+
+- name: Mount ISO
+  community.windows.win_disk_image:
+    image_path: "C:\\Windows\\Temp\\Exchange.iso"
+    state: present
+  register: mount
+
+- name: Prepare Active Directory for Exchange
+  ansible.windows.win_package:
+    product_id: Microsoft Exchange v15
+    path: "{{ mount.mount_paths[0] }}\\Setup.exe"
+    arguments: "/IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF /PrepareAD /OrganizationName:\"{{ exchange_org_name }}\""
+
+- name: Install Exchange Server
+  ansible.windows.win_package:
+    product_id: Microsoft Exchange v15
+    path: "{{ mount.mount_paths[0] }}\\Setup.exe"
+    arguments: '/IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF /Mode:Install /Roles:Mailbox /OrganizationName:"{{ exchange_org_name }}"'
+
+- name: Unmount ISO
+  community.windows.win_disk_image:
+    image_path: "C:\\Windows\\Temp\\Exchange.iso"
+    state: absent

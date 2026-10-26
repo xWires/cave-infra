@@ -1,11 +1,23 @@
 ansible_user: Administrator
 
 ansible_connection: winrm
-ansible_winrm_transport: basic
+ansible_winrm_transport: kerberos
+ansible_winrm_kerberos_delegation: true
 ansible_winrm_server_cert_validation: ignore # Required for self-signed certs
 
 ad_domain: CAVE.TANGLEDWIRES.XYZ
 ad_dns: 10.2.1.103 # The DNS server that Windows Server hosts other than ad_initial_dc should use
 
+# Where to get Exchange Server from
+exchange_url: "https://download.microsoft.com/download/ad9b1e53-f28e-4a82-987d-6c88803795b2/ExchangeServerSE-x64.iso"
+exchange_sha1: "1e280fc26257d151da6b98755fc15572ba259375"
+
+exchange_org_name: The Cave
+
 # The share must allow write access from the DOMAIN\Administrator user
 windows_backup_network_path: "\\\\10.2.1.87\\WindowsServerBackups"
+
+# A map of MAC addresses to hostnames
+hostnames:
+  B8-AC-6F-8C-FE-9F: ERNIE
+  00-26-B9-75-67-F2: NOT-ERIC

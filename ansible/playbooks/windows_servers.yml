@@ -1,11 +1,20 @@
 ---
-- name: Configure Domain Controller
+- name: Configure all Windows servers
+  hosts: windows_servers
+  roles:
+    - windows_server_rdp
+    - windows_server_backup
+
+- name: Configure domain controller(s)
   hosts: ad_dcs
   vars_prompt:
     - name: ad_safe_mode_password
       prompt: Enter the safe mode password for the domain
       private: true
   roles:
-    - windows_server_rdp
-    - windows_server_ad_dc
-    - windows_server_backup
+    - ad_dc
+
+- name: Configure Exchange server(s)
+  hosts: exchange_servers
+  roles:
+    - exchange

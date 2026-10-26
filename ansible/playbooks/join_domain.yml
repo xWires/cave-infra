@@ -1,0 +1,8 @@
+---
+- name: Join Windows servers to AD domain
+  hosts: windows_servers
+  roles:
+    - windows_server_hostname
+    - windows_server_join_domain
+  vars:
+    ansible_winrm_transport: basic

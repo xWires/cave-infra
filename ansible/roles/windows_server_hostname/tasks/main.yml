@@ -1,0 +1,17 @@
+---
+- name: Get MAC address
+  ansible.windows.win_powershell:
+    script: |
+      # Filtering by -DestinationPrefix "0.0.0.0/0" means that it returns the interface being used to route external traffic
+      (Get-NetRoute -DestinationPrefix "0.0.0.0/0" | Get-NetAdapter).MacAddress
+  changed_when: false
+  register: get_mac
+
+- name: Set hostname
+  ansible.windows.win_hostname:
+    name: "{{ hostnames[get_mac.output[0]] }}"
+  register: set_hostname
+
+- name: Reboot if required
+  ansible.windows.win_reboot:
+  when: set_hostname.reboot_required
